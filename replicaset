@@ -1,0 +1,2 @@
+Q Write a common use-case, where you will use a daemon set instead of replica set.
+A daemon set is used when we need to run a copy of pod in all or some nodes. 
