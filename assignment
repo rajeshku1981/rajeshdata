@@ -1,0 +1,128 @@
+[root@ip-172-31-14-209 k8s-specifications]# kubectl apply -f .
+deployment.apps/db created
+service/db created
+deployment.apps/redis created
+service/redis created
+deployment.apps/result created
+service/result created
+deployment.apps/vote created
+service/vote created
+deployment.apps/worker created
+[root@ip-172-31-14-209 k8s-specifications]#
+
+
+#kubectl get po -o wide
+NAME                      READY   STATUS    RESTARTS   AGE   IP               NODE                                              NOMINATED NODE   READINESS GATES
+db-b54cd94f4-zpgmd        1/1     Running   0          22s   192.168.60.215   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+redis-868d64d78-6w2cx     1/1     Running   0          22s   192.168.60.216   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+result-5d57b59f4b-dfw45   1/1     Running   0          22s   192.168.60.218   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+vote-94849dc97-gjm9w      1/1     Running   0          22s   192.168.60.217   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+worker-dd46d7584-7rx5v    1/1     Running   0          21s   192.168.60.219   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+[root@ip-172-31-14-209 k8s-specifications]#
+
+
+My Comments : As can see all these voting app pods are running.
+
+
+]# kubectl get svc
+NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+db           ClusterIP   10.98.61.62     <none>        5432/TCP         61s
+kubernetes   ClusterIP   10.96.0.1       <none>        443/TCP          106s
+redis        ClusterIP   10.110.11.72    <none>        6379/TCP         61s
+result       NodePort    10.96.150.99    <none>        5001:31001/TCP   61s
+vote         NodePort    10.109.17.106   <none>        5000:31000/TCP   61s
+
+
+My Comments : As can see there are nodeport assigned to result and vote service.
+Using pod IP and 31000 and 31001 ports respectively can vote and see voting results in windows browser.
+
+
+My Comments : As we can take external "13.214.199.93" and using nodeport 31000 starting voting .
+
+laungh voting and results app in windows in browser:
+13.214.199.93:31000
+13.214.199.93:31001
+
+
+[root@ip-172-31-14-209 k8s-specifications]# kubectl logs vote-94849dc97-gjm9w
+[2023-06-12 13:52:15 +0000] [1] [INFO] Starting gunicorn 20.1.0
+[2023-06-12 13:52:15 +0000] [1] [INFO] Listening at: http://0.0.0.0:80 (1)
+[2023-06-12 13:52:15 +0000] [1] [INFO] Using worker: sync
+[2023-06-12 13:52:15 +0000] [7] [INFO] Booting worker with pid: 7
+[2023-06-12 13:52:15 +0000] [8] [INFO] Booting worker with pid: 8
+[2023-06-12 13:52:15 +0000] [9] [INFO] Booting worker with pid: 9
+[2023-06-12 13:52:15 +0000] [10] [INFO] Booting worker with pid: 10
+192.168.171.0 - - [12/Jun/2023:14:00:01 +0000] "GET / HTTP/1.1" 200 1293 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.43"
+192.168.171.0 - - [12/Jun/2023:14:00:01 +0000] "GET /static/stylesheets/style.css HTTP/1.1" 304 0 "http://13.214.199.93:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.43"
+[2023-06-12 14:04:13,978] INFO in app: Received vote for a
+[2023-06-12 14:04:13 +0000] [10] [INFO] Received vote for a
+192.168.171.0 - - [12/Jun/2023:14:04:13 +0000] "POST / HTTP/1.1" 200 1696 "http://13.214.199.93:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.43"
+192.168.171.0 - - [12/Jun/2023:14:04:14 +0000] "GET /static/stylesheets/style.css HTTP/1.1" 304 0 "http://13.214.199.93:31000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.43"
+
+My Comments: I can see logs can see vote for voting app has vote for a 'Cats'
+
+My Comments: results are updated properly can see total 3 votes cat 2 Dog 1
+
+
+
+ Now try to delete the Pods one by one (first deleting voting Pod as )
+ 
+# kubectl delete po vote-94849dc97-gjm9w
+pod "vote-94849dc97-gjm9w" deleted
+[root@ip-172-31-14-209 k8s-specifications]# kubectl get po -o wide
+NAME                      READY   STATUS    RESTARTS   AGE   IP               NODE                                              NOMINATED NODE   READINESS GATES
+db-b54cd94f4-zpgmd        1/1     Running   0          19m   192.168.60.215   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+redis-868d64d78-6w2cx     1/1     Running   0          19m   192.168.60.216   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+result-5d57b59f4b-dfw45   1/1     Running   0          19m   192.168.60.218   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+vote-94849dc97-glnnx      1/1     Running   0          48s   192.168.60.220   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+worker-dd46d7584-7rx5v    1/1     Running   0          19m   192.168.60.219   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+[root@ip-172-31-14-209 k8s-specifications]#
+
+My Comments: After deleting vote pod , as can see in backend  linux ,voting app is restarted because in vote-deployment yaml replicas is 1 , with new name vote-94849dc97-glnnx in linux .
+In Frontend , windows voting app working fine .
+
+
+My Comments: Now try to delete worker pod, 
+
+# kubectl delete po worker-dd46d7584-7rx5v
+pod "worker-dd46d7584-7rx5v" deleted
+[root@ip-172-31-14-209 k8s-specifications]# kubectl get po -o wide
+NAME                      READY   STATUS    RESTARTS   AGE     IP               NODE                                              NOMINATED NODE   READINESS GATES
+db-b54cd94f4-zpgmd        1/1     Running   0          26m     192.168.60.215   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+redis-868d64d78-6w2cx     1/1     Running   0          26m     192.168.60.216   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+result-5d57b59f4b-dfw45   1/1     Running   0          26m     192.168.60.218   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+vote-94849dc97-glnnx      1/1     Running   0          7m25s   192.168.60.220   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+worker-dd46d7584-vmggn    1/1     Running   0          11s     192.168.60.221   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+[root@ip-172-31-14-209 k8s-specifications]#
+
+My Comments: After deleting vote pod , as can see in backend  linux ,worker app is restarted because in worker-deployment yaml replicas is 1 , with new name worker-dd46d7584-vmggn in linux .
+In Frontend , windows voting app working fine .
+
+My Comments: Now try to delete db pod
+
+# kubectl delete po db-b54cd94f4-zpgmd
+pod "db-b54cd94f4-zpgmd" deleted
+
+[root@ip-172-31-14-209 k8s-specifications]# kubectl get po -o wide
+NAME                      READY   STATUS    RESTARTS   AGE     IP               NODE                                              NOMINATED NODE   READINESS GATES
+db-b54cd94f4-xmkfl        1/1     Running   0          56s     192.168.60.222   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+redis-868d64d78-6w2cx     1/1     Running   0          29m     192.168.60.216   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+result-5d57b59f4b-dfw45   1/1     Running   1          29m     192.168.60.218   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+vote-94849dc97-glnnx      1/1     Running   0          10m     192.168.60.220   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+worker-dd46d7584-vmggn    1/1     Running   1          3m23s   192.168.60.221   ip-172-31-0-175.ap-southeast-1.compute.internal   <none>           <none>
+[root@ip-172-31-14-209 k8s-specifications]#
+
+My Comments: : After deleting db pod , as can see in backend  linux ,db app is restarted because in vote-deployment yaml replicas is 1 , with new name db-b54cd94f4-xmkfl  in linux .
+Also, there is result and worker pod restart count is  shown as 1 .
+
+In Front end, the vote count showing  wrong  value from 3 counts to 1 count. The result app has disconnected from the db pod as the connection is synscronous it is using the socket .
+Voting app we can vote and see , voting count starts and new count again.
+
+Q. your answer to HOW YOU MADE THE RESULT POD work.
+My Comments: we have to aysnc api using HTTP REST , to get the results in result app.
+In server.js in results folder , remove io socket and use app , server which uses rest apis .
+When using aync call , the result pod will have problem fixed.
+
+My Comments: I have learnt from docker , kubernates , uses commands, containter , pod , node and interaction with Master . worker nodes , docker pull , push , images , pvc pv , kubectl commands , yaml and helm charts 
+ and practiced with pods with rs , deployment , nodeport and many more info for kubernatic and networking using calleo .
+===================
